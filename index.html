@@ -252,29 +252,10 @@
             text-align: left;
         }
 
-        .day-toggle:hover {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .day-toggle .arrow {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            transition: transform 0.2s ease;
-        }
-
-        .day-accordion.open .arrow {
-            transform: rotate(180deg);
-        }
-
         .day-entries {
-            display: none;
             padding: 0 14px 14px 14px;
             border-top: 1px solid var(--border-color);
             background: var(--bg-color);
-        }
-
-        .day-accordion.open .day-entries {
-            display: block;
         }
 
         .entry-card {
@@ -614,97 +595,52 @@
             }
         }
 
-        function toggleDay(buttonElement) {
-            const accordion = buttonElement.parentElement;
-            accordion.classList.toggle('open');
-        }
-
         async function loadDiaryEntries() {
             const diaryContainer = document.getElementById('diary-container');
             
             try {
-                // Запрашиваем структуру через CDN без лимитов GitHub API
-                const response = await fetch(`https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@main/entry_20260727_0512.json?v=${Date.now()}`);
+                // Читаем напрямую ваш единственный файл с зашитым обходом кэша
+                const response = await fetch(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/diary.json?v=${Date.now()}`);
                 
                 if (!response.ok) {
-                    // Резервный запрос через API с обходом кэша
-                    const apiRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/?v=${Date.now()}`);
-                    if (!apiRes.ok) throw new Error('Не удалось получить список записей');
-                    const files = await apiRes.json();
-                    const entryFiles = files.filter(f => f.name.startsWith('entry_') && f.name.endsWith('.json'));
-                    
-                    if (entryFiles.length === 0) {
-                        diaryContainer.innerHTML = '<div class="night-notice">Записей пока нет. Скоро Лео сделает первую!</div>';
-                        return;
-                    }
-
-                    entryFiles.sort((a, b) => a.name.localeCompare(b.name));
-                    const entriesData = [];
-                    for (const file of entryFiles) {
-                        const res = await fetch(file.download_url);
-                        if (res.ok) entriesData.push(await res.json());
-                    }
-                    renderEntries(entriesData);
+                    diaryContainer.innerHTML = '<div class="night-notice">Записей пока нет. Отправь знак, чтобы Лео сделал первую!</div>';
                     return;
                 }
 
-                const singleData = await response.json();
-                renderEntries([singleData]);
+                const entry = await response.json();
+                renderEntries([entry]);
 
             } catch (error) {
                 console.error(error);
-                diaryContainer.innerHTML = `<div class="night-notice" style="color: var(--danger);">Ошибка при загрузке дневника: ${error.message}</div>`;
+                diaryContainer.innerHTML = `<div class="night-notice" style="color: var(--danger);">Ошибка при загрузке: ${error.message}</div>`;
             }
         }
 
         function renderEntries(entriesData) {
             const diaryContainer = document.getElementById('diary-container');
-            if (!entriesData || entriesData.length === 0) {
-                diaryContainer.innerHTML = '<div class="night-notice">Записей пока нет.</div>';
-                return;
-            }
-
-            const groupedByDate = {};
-            entriesData.forEach(item => {
-                const dateStr = item.date || 'Неизвестная дата';
-                if (!groupedByDate[dateStr]) groupedByDate[dateStr] = [];
-                groupedByDate[dateStr].push(item);
-            });
-
             diaryContainer.innerHTML = '';
 
-            Object.keys(groupedByDate).forEach((date, index) => {
-                const items = groupedByDate[date];
-                const isOpen = index === Object.keys(groupedByDate).length - 1 ? 'open' : '';
-
-                let cardsHtml = '';
-                items.forEach(entry => {
-                    const tagClass = entry.tag === 'Разведка' ? 'recon' : (entry.tag === 'Быт / Расходы' ? 'expense' : '');
-                    const eventNoteHtml = entry.event_note ? `<div class="event-note">${entry.event_note}</div>` : '';
-                    const titleText = entry.title ? `<strong>${entry.title}</strong><br>` : '';
-
-                    cardsHtml += `
-                        <div class="entry-card">
-                            <div class="entry-header">
-                                <span class="entry-time">${entry.time || ''}</span>
-                                <span class="entry-tag ${tagClass}">${entry.tag || 'Запись'}</span>
-                            </div>
-                            <div class="entry-text">
-                                ${titleText}${entry.text || ''}
-                            </div>
-                            ${eventNoteHtml}
-                        </div>
-                    `;
-                });
+            entriesData.forEach(entry => {
+                const tagClass = entry.tag === 'Разведка' ? 'recon' : (entry.tag === 'Быт / Расходы' ? 'expense' : '');
+                const eventNoteHtml = entry.event_note ? `<div class="event-note">${entry.event_note}</div>` : '';
+                const titleText = entry.title ? `<strong>${entry.title}</strong><br>` : '';
 
                 const accordionHtml = `
-                    <div class="day-accordion ${isOpen}">
-                        <button class="day-toggle" onclick="toggleDay(this)">
-                            <span>${date}</span>
-                            <span class="arrow">▼</span>
-                        </button>
+                    <div class="day-accordion open">
+                        <div class="day-toggle">
+                            <span>${entry.date || 'Сегодня'}</span>
+                        </div>
                         <div class="day-entries">
-                            ${cardsHtml}
+                            <div class="entry-card">
+                                <div class="entry-header">
+                                    <span class="entry-time">${entry.time || ''}</span>
+                                    <span class="entry-tag ${tagClass}">${entry.tag || 'Запись'}</span>
+                                </div>
+                                <div class="entry-text">
+                                    ${titleText}${entry.text || ''}
+                                </div>
+                                ${eventNoteHtml}
+                            </div>
                         </div>
                     </div>
                 `;
