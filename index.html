@@ -1,1 +1,808 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дневник Лео</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d0f14;
+            --card-bg: #151821;
+            --border-color: #232736;
+            --text-main: #e2e8f0;
+            --text-muted: #7c8596;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            padding: 20px 16px 80px 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        header {
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .profile-info h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .profile-info p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--accent-glow);
+            color: #818cf8;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--success);
+            border-radius: 50%;
+        }
+
+        .tabs-nav {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 18px;
+            background: var(--card-bg);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 6px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .goal-card {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+        }
+
+        .goal-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #a5b4fc;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .goal-text {
+            font-size: 0.88rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .intervention-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 24px;
+        }
+
+        .intervention-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #a5b4fc;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .intervention-input {
+            flex: 1;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .intervention-input:focus {
+            border-color: var(--accent);
+        }
+
+        .send-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .day-accordion {
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--card-bg);
+        }
+
+        .day-toggle {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--card-bg);
+            border: none;
+            color: var(--text-main);
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .day-toggle:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .day-toggle .arrow {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .day-accordion.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        .day-entries {
+            display: none;
+            padding: 0 14px 14px 14px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-color);
+        }
+
+        .day-accordion.open .day-entries {
+            display: block;
+        }
+
+        .entry-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 12px;
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .entry-time {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .entry-tag {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .entry-tag.recon {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fcd34d;
+        }
+
+        .entry-tag.expense {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+        }
+
+        .entry-text {
+            font-size: 0.92rem;
+            color: #cbd5e1;
+        }
+
+        .event-note {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border-color);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .recon-target-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .target-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .target-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #fcd34d;
+        }
+
+        .target-status {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(245, 158, 11, 0.15);
+            color: #fcd34d;
+        }
+
+        .fact-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .fact-item {
+            font-size: 0.85rem;
+            background: var(--bg-color);
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .fact-label {
+            color: var(--text-muted);
+        }
+
+        .fact-value {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .archive-section {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .archive-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .night-notice {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            padding: 14px;
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            margin-top: 16px;
+        }
+
+        .risk-warning-card {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+
+        .risk-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #fca5a5;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .risk-desc {
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+
+        .rumor-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+        }
+
+        .rumor-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .rumor-text {
+            font-size: 0.88rem;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="profile-info">
+                <h1>Дневник Лео</h1>
+                <p>Североград • GMT+10</p>
+            </div>
+            <div id="status-badge" class="status-badge">
+                <span class="status-dot"></span>
+                В сети
+            </div>
+        </header>
+
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('diary')">📖 Дневник</button>
+            <button class="tab-btn" onclick="switchTab('recon')">🔍 Наблюдения</button>
+            <button class="tab-btn" onclick="switchTab('social')">👥 Социум</button>
+        </div>
+
+        <!-- ВКЛАДКА 1: ДНЕВНИК -->
+        <div id="tab-diary" class="tab-content active">
+            <div class="goal-card">
+                <div class="goal-title">🎯 Активная цель</div>
+                <div class="goal-text">Узнать имя и график парня из кофейни напротив, не вызвав подозрений.</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label"><span>Сытость</span><span id="stat-satiety-val" class="stat-value">65%</span></div>
+                    <div class="progress-bar"><div id="stat-satiety-bar" class="progress-fill" style="width: 65%;"></div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><span>Жажда</span><span id="stat-thirst-val" class="stat-value">45%</span></div>
+                    <div class="progress-bar"><div id="stat-thirst-bar" class="progress-fill" style="width: 45%; background: #38bdf8;"></div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><span>Бюджет</span><span id="stat-money-val" class="stat-value">11 400 ₽</span></div>
+                    <div class="progress-bar"><div id="stat-money-bar" class="progress-fill" style="width: 40%; background: #34d399;"></div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><span>Прогресс цели</span><span id="stat-goal-val" class="stat-value">20%</span></div>
+                    <div class="progress-bar"><div id="stat-goal-bar" class="progress-fill" style="width: 20%; background: #a855f7;"></div></div>
+                </div>
+            </div>
+
+            <div class="intervention-box">
+                <div class="intervention-title">⚡ Анонимный знак / Событие</div>
+                <div class="input-group">
+                    <input type="text" id="intervention-input" class="intervention-input" placeholder="Например: 'Уронить листовку возле его работы'...">
+                    <button class="send-btn" onclick="sendIntervention()">Послать</button>
+                </div>
+            </div>
+
+            <main id="diary-container">
+                <!-- Сюда динамически загружаются записи -->
+                <div class="night-notice" id="loading-notice">
+                    🔄 Загрузка записей из репозитория...
+                </div>
+            </main>
+        </div>
+
+        <!-- ВКЛАДКА 2: НАБЛЮДЕНИЯ -->
+        <div id="tab-recon" class="tab-content">
+            <div class="recon-target-card">
+                <div class="target-header">
+                    <div id="target-name" class="target-name">Объект №1 (Парень из кофейни)</div>
+                    <div class="target-status">В процессе</div>
+                </div>
+
+                <ul id="fact-list" class="fact-list">
+                    <li class="fact-item">
+                        <span class="fact-label">Имя:</span>
+                        <span class="fact-value" style="color: var(--text-muted);">Неизвестно</span>
+                    </li>
+                    <li class="fact-item">
+                        <span class="fact-label">Место работы:</span>
+                        <span class="fact-value">Кофейня «Северный Берег»</span>
+                    </li>
+                    <li class="fact-item">
+                        <span class="fact-label">Время перерыва:</span>
+                        <span class="fact-value">13:30 – 14:00</span>
+                    </li>
+                    <li class="fact-item">
+                        <span class="fact-label">Ориентация / Статус:</span>
+                        <span class="fact-value" style="color: var(--text-muted);">Не разведка</span>
+                    </li>
+                    <li class="fact-item">
+                        <span class="fact-label">Замеченные привычки:</span>
+                        <span class="fact-value">Пьет черный эспрессо, носит наушники</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="archive-section">
+                <div class="archive-title">📁 Архив прошлых целей</div>
+                <div class="night-notice" style="border-style: solid; opacity: 0.6; margin-top: 0;">
+                    Архив пуст. Это первая цель Лео.
+                </div>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА 3: СОЦИУМ И РЕПУТАЦИЯ -->
+        <div id="tab-social" class="tab-content">
+            <div class="risk-warning-card">
+                <div class="risk-title">⚠️ Риск разоблачения (Конспирация)</div>
+                <div class="risk-desc">Уровень подозрения: <strong id="risk-val">12%</strong>. Лео ведет себя осторожно, прямых улик нет.</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label"><span>Работа / Начальство</span><span id="rep-work-val" class="stat-value">80%</span></div>
+                    <div class="progress-bar"><div id="rep-work-bar" class="progress-fill" style="width: 80%; background: var(--success);"></div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><span>Коллеги</span><span id="rep-colleagues-val" class="stat-value">60%</span></div>
+                    <div class="progress-bar"><div id="rep-colleagues-bar" class="progress-fill" style="width: 60%; background: #38bdf8;"></div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><span>Соседи / Дом</span><span id="rep-neighbors-val" class="stat-value">50%</span></div>
+                    <div class="progress-bar"><div id="rep-neighbors-bar" class="progress-fill" style="width: 50%; background: var(--warning);"></div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><span>Друзья</span><span id="rep-friends-val" class="stat-value">40%</span></div>
+                    <div class="progress-bar"><div id="rep-friends-bar" class="progress-fill" style="width: 40%; background: var(--warning);"></div></div>
+                </div>
+            </div>
+
+            <div class="archive-section" style="margin-top: 12px; padding-top: 12px;">
+                <div class="archive-title">🗣️ Слухи в Северограде</div>
+                <div id="rumors-container">
+                    <div class="rumor-item">
+                        <div class="rumor-time">Вчера, 19:10 • Коллеги</div>
+                        <div class="rumor-text">«Лео какой-то дерганый в последнее время. Постоянно смотрит в окно на кофейню напротив. Может, ищет новую работу?»</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const REPO_OWNER = 'Neera-pix';
+        const REPO_NAME = 'Leo-s-diary';
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (tabName === 'diary') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('tab-diary').classList.add('active');
+            } else if (tabName === 'recon') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('tab-recon').classList.add('active');
+            } else if (tabName === 'social') {
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('tab-social').classList.add('active');
+            }
+        }
+
+        function toggleDay(buttonElement) {
+            const accordion = buttonElement.parentElement;
+            accordion.classList.toggle('open');
+        }
+
+        async function loadDiaryEntries() {
+            const diaryContainer = document.getElementById('diary-container');
+            
+            try {
+                // Запрашиваем список всех файлов в репозитории через GitHub API
+                const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/`);
+                if (!response.ok) throw new Error('Ошибка сети при получении списка файлов');
+                
+                const files = await response.json();
+                
+                // Фильтруем только файлы постов entry_*.json или diary.json
+                const entryFiles = files.filter(f => f.name.startsWith('entry_') && f.name.endsWith('.json') || f.name === 'diary.json');
+
+                if (entryFiles.length === 0) {
+                    diaryContainer.innerHTML = '<div class="night-notice">Записей пока нет. Скоро Лео сделает первую!</div>';
+                    return;
+                }
+
+                // Сортируем файлы от старых к новым
+                entryFiles.sort((a, b) => a.name.localeCompare(b.name));
+
+                // Скачиваем содержимое всех файлов
+                const entriesData = [];
+                for (const file of entryFiles) {
+                    const res = await fetch(file.download_url);
+                    if (res.ok) {
+                        const content = await res.json();
+                        entriesData.push(content);
+                    }
+                }
+
+                if (entriesData.length === 0) {
+                    diaryContainer.innerHTML = '<div class="night-notice">Не удалось распарсить данные записей.</div>';
+                    return;
+                }
+
+                // Группируем по датам
+                const groupedByDate = {};
+                entriesData.forEach(item => {
+                    const dateStr = item.date || 'Неизвестная дата';
+                    if (!groupedByDate[dateStr]) groupedByDate[dateStr] = [];
+                    groupedByDate[dateStr].push(item);
+                });
+
+                diaryContainer.innerHTML = ''; // Очищаем спиннер загрузки
+
+                // Рендерим группы по дням
+                Object.keys(groupedByDate).forEach((date, index) => {
+                    const items = groupedByDate[date];
+                    const isOpen = index === Object.keys(groupedByDate).length - 1 ? 'open' : '';
+
+                    let cardsHtml = '';
+                    items.forEach(entry => {
+                        const tagClass = entry.tag === 'Разведка' ? 'recon' : (entry.tag === 'Быт / Расходы' ? 'expense' : '');
+                        const eventNoteHtml = entry.event_note ? `<div class="event-note">${entry.event_note}</div>` : '';
+                        const titleText = entry.title ? `<strong>${entry.title}</strong><br>` : '';
+
+                        cardsHtml += `
+                            <div class="entry-card">
+                                <div class="entry-header">
+                                    <span class="entry-time">${entry.time || ''}</span>
+                                    <span class="entry-tag ${tagClass}">${entry.tag || 'Запись'}</span>
+                                </div>
+                                <div class="entry-text">
+                                    ${titleText}${entry.text || ''}
+                                </div>
+                                ${eventNoteHtml}
+                            </div>
+                        `;
+                    });
+
+                    const accordionHtml = `
+                        <div class="day-accordion ${isOpen}">
+                            <button class="day-toggle" onclick="toggleDay(this)">
+                                <span>${date}</span>
+                                <span class="arrow">▼</span>
+                            </button>
+                            <div class="day-entries">
+                                ${cardsHtml}
+                            </div>
+                        </div>
+                    `;
+
+                    diaryContainer.innerHTML += accordionHtml;
+                });
+
+                // Добавляем плашку ночного режима
+                diaryContainer.innerHTML += `
+                    <div class="night-notice">
+                        🌙 Лео спит (23:00 – 07:00). Новые записи появятся утром.
+                    </div>
+                `;
+
+                // Обновляем виджеты самыми свежими данными из последней записи
+                const lastEntry = entriesData[entriesData.length - 1];
+                if (lastEntry.stats) updateStatsUI(lastEntry.stats);
+                if (lastEntry.recon_update) updateReconUI(lastEntry.recon_update);
+                if (lastEntry.new_rumor) addRumorUI(lastEntry.new_rumor);
+
+            } catch (error) {
+                console.error(error);
+                diaryContainer.innerHTML = `<div class="night-notice" style="color: var(--danger);">Ошибка при загрузке дневника: ${error.message}</div>`;
+            }
+        }
+
+        function updateStatsUI(stats) {
+            if (stats.satiety !== undefined) {
+                document.getElementById('stat-satiety-val').innerText = stats.satiety + '%';
+                document.getElementById('stat-satiety-bar').style.width = stats.satiety + '%';
+            }
+            if (stats.thirst !== undefined) {
+                document.getElementById('stat-thirst-val').innerText = stats.thirst + '%';
+                document.getElementById('stat-thirst-bar').style.width = stats.thirst + '%';
+            }
+            if (stats.money !== undefined) {
+                document.getElementById('stat-money-val').innerText = stats.money.toLocaleString() + ' ₽';
+                document.getElementById('stat-money-bar').style.width = Math.min(100, (stats.money / 30000) * 100) + '%';
+            }
+            if (stats.goal_progress !== undefined) {
+                document.getElementById('stat-goal-val').innerText = stats.goal_progress + '%';
+                document.getElementById('stat-goal-bar').style.width = stats.goal_progress + '%';
+            }
+            if (stats.risk !== undefined) {
+                document.getElementById('risk-val').innerText = stats.risk + '%';
+            }
+            if (stats.reputation) {
+                if (stats.reputation.work !== undefined) {
+                    document.getElementById('rep-work-val').innerText = stats.reputation.work + '%';
+                    document.getElementById('rep-work-bar').style.width = stats.reputation.work + '%';
+                }
+                if (stats.reputation.colleagues !== undefined) {
+                    document.getElementById('rep-colleagues-val').innerText = stats.reputation.colleagues + '%';
+                    document.getElementById('rep-colleagues-bar').style.width = stats.reputation.colleagues + '%';
+                }
+                if (stats.reputation.neighbors !== undefined) {
+                    document.getElementById('rep-neighbors-val').innerText = stats.reputation.neighbors + '%';
+                    document.getElementById('rep-neighbors-bar').style.width = stats.reputation.neighbors + '%';
+                }
+                if (stats.reputation.friends !== undefined) {
+                    document.getElementById('rep-friends-val').innerText = stats.reputation.friends + '%';
+                    document.getElementById('rep-friends-bar').style.width = stats.reputation.friends + '%';
+                }
+            }
+        }
+
+        function updateReconUI(recon) {
+            if (recon.target_name) {
+                document.getElementById('target-name').innerText = recon.target_name;
+            }
+            if (recon.facts) {
+                const factList = document.getElementById('fact-list');
+                factList.innerHTML = '';
+                for (const [key, val] of Object.entries(recon.facts)) {
+                    factList.innerHTML += `
+                        <li class="fact-item">
+                            <span class="fact-label">${key}:</span>
+                            <span class="fact-value">${val}</span>
+                        </li>
+                    `;
+                }
+            }
+        }
+
+        function addRumorUI(rumor) {
+            const container = document.getElementById('rumors-container');
+            const item = document.createElement('div');
+            item.className = 'rumor-item';
+            item.innerHTML = `
+                <div class="rumor-time">${rumor.time || 'Только что'}</div>
+                <div class="rumor-text">«${rumor.text}»</div>
+            `;
+            container.prepend(item);
+        }
+
+        function sendIntervention() {
+            const input = document.getElementById('intervention-input');
+            if (!input.value.trim()) return;
+            alert('Знак записан! При следующем обновлении Лео отреагирует на него.');
+            input.value = '';
+        }
+
+        // Запуск загрузки данных при старте
+        loadDiaryEntries();
+    </script>
+</body>
+</html>
 
