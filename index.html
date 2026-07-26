@@ -454,7 +454,6 @@
             <button class="tab-btn" onclick="switchTab('social')">👥 Социум</button>
         </div>
 
-        <!-- ВКЛАДКА 1: ДНЕВНИК -->
         <div id="tab-diary" class="tab-content active">
             <div class="goal-card">
                 <div class="goal-title">🎯 Активная цель</div>
@@ -495,7 +494,6 @@
             </main>
         </div>
 
-        <!-- ВКЛАДКА 2: НАБЛЮДЕНИЯ -->
         <div id="tab-recon" class="tab-content">
             <div class="recon-target-card">
                 <div class="target-header">
@@ -504,38 +502,14 @@
                 </div>
 
                 <ul id="fact-list" class="fact-list">
-                    <li class="fact-item">
-                        <span class="fact-label">Имя:</span>
-                        <span class="fact-value" style="color: var(--text-muted);">Неизвестно</span>
-                    </li>
-                    <li class="fact-item">
-                        <span class="fact-label">Место работы:</span>
-                        <span class="fact-value">Кофейня «Северный Берег»</span>
-                    </li>
-                    <li class="fact-item">
-                        <span class="fact-label">Время перерыва:</span>
-                        <span class="fact-value">13:30 – 14:00</span>
-                    </li>
-                    <li class="fact-item">
-                        <span class="fact-label">Ориентация / Статус:</span>
-                        <span class="fact-value" style="color: var(--text-muted);">Не разведка</span>
-                    </li>
-                    <li class="fact-item">
-                        <span class="fact-label">Замеченные привычки:</span>
-                        <span class="fact-value">Пьет черный эспрессо, носит наушники</span>
-                    </li>
+                    <li class="fact-item"><span class="fact-label">Имя:</span><span class="fact-value" style="color: var(--text-muted);">Неизвестно</span></li>
+                    <li class="fact-item"><span class="fact-label">Место работы:</span><span class="fact-value">Кофейня «Северный Берег»</span></li>
+                    <li class="fact-item"><span class="fact-label">Время перерыва:</span><span class="fact-value">13:30 – 14:00</span></li>
+                    <li class="fact-item"><span class="fact-label">Замеченные привычки:</span><span class="fact-value">Пьет черный эспрессо, носит наушники</span></li>
                 </ul>
-            </div>
-
-            <div class="archive-section">
-                <div class="archive-title">📁 Архив прошлых целей</div>
-                <div class="night-notice" style="border-style: solid; opacity: 0.6; margin-top: 0;">
-                    Архив пуст. Это первая цель Лео.
-                </div>
             </div>
         </div>
 
-        <!-- ВКЛАДКА 3: СОЦИУМ И РЕПУТАЦИЯ -->
         <div id="tab-social" class="tab-content">
             <div class="risk-warning-card">
                 <div class="risk-title">⚠️ Риск разоблачения (Конспирация)</div>
@@ -563,15 +537,9 @@
 
             <div class="archive-section" style="margin-top: 12px; padding-top: 12px;">
                 <div class="archive-title">🗣️ Слухи в Северограде</div>
-                <div id="rumors-container">
-                    <div class="rumor-item">
-                        <div class="rumor-time">Вчера, 19:10 • Коллеги</div>
-                        <div class="rumor-text">«Лео какой-то дерганый в последнее время. Постоянно смотрит в окно на кофейню напротив. Может, ищет новую работу?»</div>
-                    </div>
-                </div>
+                <div id="rumors-container"></div>
             </div>
         </div>
-
     </div>
 
     <script>
@@ -599,16 +567,32 @@
             const diaryContainer = document.getElementById('diary-container');
             
             try {
-                // Читаем напрямую ваш единственный файл с зашитым обходом кэша
-                const response = await fetch(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/diary.json?v=${Date.now()}`);
+                const apiRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/?v=${Date.now()}`);
+                if (!apiRes.ok) throw new Error('Не удалось получить список файлов');
                 
-                if (!response.ok) {
-                    diaryContainer.innerHTML = '<div class="night-notice">Записей пока нет. Отправь знак, чтобы Лео сделал первую!</div>';
+                const files = await apiRes.json();
+                const entryFiles = files.filter(f => (f.name.startsWith('entry_') || f.name === 'diary.json') && f.name.endsWith('.json'));
+
+                if (entryFiles.length === 0) {
+                    diaryContainer.innerHTML = '<div class="night-notice">Записей пока нет. Скоро Лео сделает первую!</div>';
                     return;
                 }
 
-                const entry = await response.json();
-                renderEntries([entry]);
+                entryFiles.sort((a, b) => a.name.localeCompare(b.name));
+
+                const entriesData = [];
+                for (const file of entryFiles) {
+                    const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${file.name}?v=${Date.now()}`;
+                    const res = await fetch(rawUrl);
+                    if (res.ok) {
+                        try {
+                            const data = await res.json();
+                            entriesData.push(data);
+                        } catch(e) {}
+                    }
+                }
+
+                renderEntries(entriesData);
 
             } catch (error) {
                 console.error(error);
@@ -618,6 +602,11 @@
 
         function renderEntries(entriesData) {
             const diaryContainer = document.getElementById('diary-container');
+            if (!entriesData || entriesData.length === 0) {
+                diaryContainer.innerHTML = '<div class="night-notice">Записей пока нет.</div>';
+                return;
+            }
+
             diaryContainer.innerHTML = '';
 
             entriesData.forEach(entry => {
