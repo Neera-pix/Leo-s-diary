@@ -567,31 +567,15 @@
             const diaryContainer = document.getElementById('diary-container');
             
             try {
-                const apiRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/?v=${Date.now()}`);
-                if (!apiRes.ok) throw new Error('Не удалось получить список файлов');
+                // Скачиваем сразу сам файл напрямую, игнорируя системные лимиты GitHub API
+                const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/diary.json?v=${Date.now()}`;
+                const res = await fetch(rawUrl);
                 
-                const files = await apiRes.json();
-                const entryFiles = files.filter(f => (f.name.startsWith('entry_') || f.name === 'diary.json') && f.name.endsWith('.json'));
-
-                if (entryFiles.length === 0) {
-                    diaryContainer.innerHTML = '<div class="night-notice">Записей пока нет. Скоро Лео сделает первую!</div>';
-                    return;
-                }
-
-                entryFiles.sort((a, b) => a.name.localeCompare(b.name));
-
-                const entriesData = [];
-                for (const file of entryFiles) {
-                    const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${file.name}?v=${Date.now()}`;
-                    const res = await fetch(rawUrl);
-                    if (res.ok) {
-                        try {
-                            const data = await res.json();
-                            entriesData.push(data);
-                        } catch(e) {}
-                    }
-                }
-
+                if (!res.ok) throw new Error('Не удалось загрузить файл дневника');
+                
+                const entriesData = await res.json();
+                
+                // Передаем готовый массив в функцию отрисовки
                 renderEntries(entriesData);
 
             } catch (error) {
