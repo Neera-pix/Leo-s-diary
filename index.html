@@ -235,6 +235,7 @@
             border-radius: 12px;
             overflow: hidden;
             background: var(--card-bg);
+            transition: all 0.3s ease;
         }
 
         .day-toggle {
@@ -250,6 +251,17 @@
             align-items: center;
             cursor: pointer;
             text-align: left;
+            user-select: none;
+        }
+
+        .day-toggle:active {
+            background: #1a1e2a;
+        }
+
+        .toggle-icon {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            transition: transform 0.3s;
         }
 
         .day-entries {
@@ -563,19 +575,33 @@
             }
         }
 
+        // Функция сворачивания/разворачивания дней
+        function toggleDay(element) {
+            const accordion = element.parentElement;
+            const entriesDiv = accordion.querySelector('.day-entries');
+            const icon = element.querySelector('.toggle-icon');
+
+            if (accordion.classList.contains('open')) {
+                accordion.classList.remove('open');
+                entriesDiv.style.display = 'none';
+                icon.textContent = '▶';
+            } else {
+                accordion.classList.add('open');
+                entriesDiv.style.display = 'block';
+                icon.textContent = '▼';
+            }
+        }
+
         async function loadDiaryEntries() {
             const diaryContainer = document.getElementById('diary-container');
             
             try {
-                // Скачиваем сразу сам файл напрямую, игнорируя системные лимиты GitHub API
                 const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/diary.json?v=${Date.now()}`;
                 const res = await fetch(rawUrl);
                 
                 if (!res.ok) throw new Error('Не удалось загрузить файл дневника');
                 
                 const entriesData = await res.json();
-                
-                // Передаем готовый массив в функцию отрисовки
                 renderEntries(entriesData);
 
             } catch (error) {
@@ -593,27 +619,57 @@
 
             diaryContainer.innerHTML = '';
 
-            entriesData.forEach(entry => {
-                const tagClass = entry.tag === 'Разведка' ? 'recon' : (entry.tag === 'Быт / Расходы' ? 'expense' : '');
-                const eventNoteHtml = entry.event_note ? `<div class="event-note">${entry.event_note}</div>` : '';
-                const titleText = entry.title ? `<strong>${entry.title}</strong><br>` : '';
+            // Группируем записи по дням в обратном порядке (сначала самые новые)
+            const groupedArray = [];
+            for (let i = entriesData.length - 1; i >= 0; i--) {
+                const entry = entriesData[i];
+                const date = entry.date || 'Сегодня';
+                
+                const lastGroup = groupedArray[groupedArray.length - 1];
+                if (!lastGroup || lastGroup.date !== date) {
+                    groupedArray.push({ date: date, entries: [entry] });
+                } else {
+                    lastGroup.entries.push(entry);
+                }
+            }
+
+            // Отрисовываем сгруппированные дни
+            groupedArray.forEach((group, index) => {
+                let entriesHtml = '';
+                
+                // Записи внутри дня уже идут сверху вниз (новые -> старые) благодаря обратному циклу
+                group.entries.forEach(entry => {
+                    const tagClass = entry.tag === 'Разведка' ? 'recon' : (entry.tag === 'Быт / Расходы' ? 'expense' : '');
+                    const eventNoteHtml = entry.event_note ? `<div class="event-note">${entry.event_note}</div>` : '';
+                    const titleText = entry.title ? `<strong>${entry.title}</strong><br>` : '';
+
+                    entriesHtml += `
+                        <div class="entry-card">
+                            <div class="entry-header">
+                                <span class="entry-time">${entry.time || ''}</span>
+                                <span class="entry-tag ${tagClass}">${entry.tag || 'Запись'}</span>
+                            </div>
+                            <div class="entry-text">
+                                ${titleText}${entry.text || ''}
+                            </div>
+                            ${eventNoteHtml}
+                        </div>
+                    `;
+                });
+
+                // Первый день разворачиваем, остальные сворачиваем
+                const isOpen = index === 0 ? 'open' : '';
+                const displayStyle = index === 0 ? 'block' : 'none';
+                const chevron = index === 0 ? '▼' : '▶';
 
                 const accordionHtml = `
-                    <div class="day-accordion open">
-                        <div class="day-toggle">
-                            <span>${entry.date || 'Сегодня'}</span>
+                    <div class="day-accordion ${isOpen}">
+                        <div class="day-toggle" onclick="toggleDay(this)">
+                            <span>${group.date}</span>
+                            <span class="toggle-icon">${chevron}</span>
                         </div>
-                        <div class="day-entries">
-                            <div class="entry-card">
-                                <div class="entry-header">
-                                    <span class="entry-time">${entry.time || ''}</span>
-                                    <span class="entry-tag ${tagClass}">${entry.tag || 'Запись'}</span>
-                                </div>
-                                <div class="entry-text">
-                                    ${titleText}${entry.text || ''}
-                                </div>
-                                ${eventNoteHtml}
-                            </div>
+                        <div class="day-entries" style="display: ${displayStyle};">
+                            ${entriesHtml}
                         </div>
                     </div>
                 `;
@@ -627,9 +683,13 @@
                 </div>
             `;
 
+            // Обновляем статистику по самой последней добавленной записи
             const lastEntry = entriesData[entriesData.length - 1];
             if (lastEntry.stats) updateStatsUI(lastEntry.stats);
             if (lastEntry.recon_update) updateReconUI(lastEntry.recon_update);
+            
+            // Очищаем слухи и добавляем свежий, если есть
+            document.getElementById('rumors-container').innerHTML = '';
             if (lastEntry.new_rumor) addRumorUI(lastEntry.new_rumor);
         }
 
